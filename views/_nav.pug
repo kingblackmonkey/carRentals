@@ -1,0 +1,33 @@
+.site-mobile-menu.site-navbar-target
+  .site-mobile-menu-header
+    .site-mobile-menu-close.mt-3
+      span.icon-close2.js-menu-toggle
+  .site-mobile-menu-body
+header.site-navbar.site-navbar-target(role='banner')
+  .container
+    .row.align-items-center.position-relative
+      .col-3
+        .site-logo
+          a(href='/') CarRent
+      .col-9.text-right
+        span.d-inline-block.d-lg-none
+          a.text-white.site-menu-toggle.js-menu-toggle.py-5.text-white(href='#')
+            span.icon-menu.h3.text-white
+        nav.site-navigation.text-right.ml-auto.d-none.d-lg-block(role='navigation')
+          ul.site-menu.main-menu.js-clone-nav.ml-auto
+            li(class= homeLink ?  "active":'')
+              a.nav-link(href='/') Home
+           
+            li(class= carLink ?  "active":'')
+              a.nav-link(href='/cars') Cars
+            li
+              a.nav-link(href='about.html') About
+           
+            li
+              a.nav-link(href='contact.html') Contact
+            li
+              a.nav-link(href='services.html') Log In 
+            li
+              a.nav-link(href='services.html') ProFIle  
+            li
+              a.nav-link(href='services.html') Log Out 
