@@ -1,0 +1,44 @@
+extends index
+
+block content
+    .ftco-blocks-cover-1
+        .container(style='margin-top: 10rem; text-align: center')
+            if verifiedPayment
+                h1 Thanks for Your Booking! 
+                p= 'Your Booking Number is ' +   orderNUmber
+                p Check Email for Your Confirmation
+                hr
+            else
+                h1 No Confirmed Booking
+                a(href='/') Go Back
+                hr
+               
+          
+                  
+    .container.site-section.mb-5
+        .row.justify-content-center.text-center
+            .col-7.text-center.mb-5
+                h2 How it works
+                p
+                    | Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo assumenda, dolorum necessitatibus eius earum voluptates sed!
+        .how-it-works.d-flex
+            .step
+                span.number
+                    span 01
+                span.caption Time & Place
+            .step
+                span.number
+                    span 02
+                span.caption Car
+            .step
+                span.number
+                    span 03
+                span.caption Details
+            .step
+                span.number
+                    span 04
+                span.caption Checkout
+            .step
+                span.number
+                    span 05
+                span.caption Done

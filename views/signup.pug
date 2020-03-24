@@ -1,0 +1,33 @@
+extends index
+block content
+    .ftco-blocks-cover-1
+        .ftco-cover-1.overlay.innerpage(style="background-image: url('/images/hero_2.jpg')")
+            .container
+                  .row.align-items-center.justify-content-center
+                        .col-lg-6
+                            #first
+                                .myform.form
+                                    .logo.mb-3
+                                        .col-md-12.text-center
+                                                h2 Sign Up
+                                    form(class='signup-form')
+                                       
+                                        .form-group
+                                                label(for='exampleInputEmail1') User Name
+                                                input#username.form-control(type='text', name='username', aria-describedby='username', placeholder='Enter user name')
+                                        .form-group
+                                                label(for='exampleInputEmail1') Email address
+                                                input#email.form-control(type='email', name='email', aria-describedby='emailHelp', placeholder='Enter email')
+                                        .form-group
+                                                label(for='exampleInputEmail1') Password
+                                                input#password.form-control(type='password', name='password', aria-describedby='password', placeholder='Enter Password')
+                                        .form-group
+                                                label(for='exampleInputEmail1') Confirm Password
+                                                input#confirmpassword.form-control(type='password', name='confirmPassword', aria-describedby='confirmPassword', placeholder='Enter Confirm Password') 
+                                        .col-md-12.text-center
+                                                input(type='hidden', name="_csrf" value= csrfToken)  
+                                                button.btn.btn-block.mybtn.btn-primary.tx-tfm(type='submit',style="width:35%;margin:0 auto; height: 40px" ) Sign up
+                                    
+                                      
+                                      
+                            

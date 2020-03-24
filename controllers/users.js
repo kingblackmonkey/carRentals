@@ -5,6 +5,9 @@
 const User = require('../models/userModel')
 exports.getAllUsers = async(req,res)=>{
  try {
+    //  console.log(req.session.isAuth)
+    //  console.log(req.session.cart)
+
  const user =  await User.find(req.body);
  res.status(200).json({
     status: 'success',

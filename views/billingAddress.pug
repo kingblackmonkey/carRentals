@@ -1,0 +1,125 @@
+extends index
+
+block content
+
+
+    .ftco-blocks-cover-1
+        .ftco-cover-1.overlay.innerpage(style="background: #212529f2; min-height: 100px; height: 0vh ")
+    
+    form.billing-address(action=`${calculatedTax ?'/payment' : '/checkout'}` method='post' data-calculatedTax =  calculatedTax+'')
+        input(type="hidden" name="_csrf" value= csrfToken)  
+        input(type="hidden" name="carId" value= car._id)  
+        .row.justify-content-center(style="max-width:1600px; margin:0 auto")
+            .col-xl-12
+                .card.shadow-lg
+                    .row.justify-content-around
+                        
+                        .col-md-6
+                            .card.border-0
+                                .card-header.pb-0
+                                    h2.card-title.space Checkout
+                                    p.card-text.text-muted.mt-4.space BILLING DETAILS
+                                    small Note: We use your entered zipcode to find pickup locations within 20 miles away from you.                            
+                                     
+                                    br
+                                    small If no found pickup locaions, it means this car is not near you and please contact us at 1800-234-1245
+
+                                    hr.my-0
+                                .card-body                            
+                                
+                                    .container                                    
+                                        
+                                        .form-group
+                                            // Street 1
+                                            label.control-label(for='street1_id') Street Address 1
+                                            input#street1_id.form-control(type='text', name='street1',value=street1 , disabled= street1? true:false   ,placeholder='Street address, P.O. box, company name, c/o')
+                                        .form-group
+                                            // Street 2
+                                            label.control-label(for='street2_id') Street Address 2
+                                            input#street2_id.form-control(type='text', value=street2   , name='street2', disabled= street1? true:false,  placeholder='Apartment, suite, unit, building, floor, etc.')
+                                        .form-group
+                                            // City
+                                            label.control-label(for='city_id') City
+                                            input#city_id.form-control(type='text', name='city', disabled= city? true:false, value=city,placeholder='Smallville')
+                                        .form-group
+                                            // State Button
+                                            label.control-label(for='state_id') State
+                                            select#state_id.form-control(name='state')
+                                                option(value='CA' selected) California
+                                                
+                                        .form-group
+                                            // Zip Code
+                                            label.control-label(for='zip_id') Zip Code
+                                            input#zip_id.form-control(type='text', name='zip',value=zip  ,disabled= zip? true:false ,placeholder='Zip Code')
+                                    
+                        .col-md-6
+                            .card.border-0 
+                                .card-header.card-2.my-3
+                                    p.card-text.text-muted.mt-md-4.mb-2.space YOUR ORDER 
+                                    hr.my-2
+                                .card-body.pt-0
+                                    .row.align-items-center
+                                        .col
+                                            if calculatedTax
+                                                h6  Posible Pickup Locations Near You
+                                        .col.text-right
+                                            if foundCarLoc
+                                                each carLoc in foundCarLoc
+
+                                                    .card-body-checkout-item(style='margin-bottom:8px')
+                                                        p(style="margin-bottom: 0px")=`${carLoc.address} ${carLoc.city} ${carLoc.state} ${carLoc.zipcode}`
+                                                        small= `Location Phone Number: ${carLoc.storePhoneNumber}`
+                                            else
+                                                if calculatedTax
+                                                    .card-body-checkout-item(style='margin-bottom:8px')
+                                                        p(style="margin-bottom: 0px") This Car is Not Near You
+                                                else     
+                                                    .card-body-checkout-item(style='margin-bottom:8px')
+                                            
+                                         
+                                    hr
+
+                                    .row.justify-content-between
+                                        .col-auto.col-md-7
+                                            .media.flex-column.flex-sm-row.align-items-md-center
+                                                img.img-fluid.mr-2(src= car.imageCover, width='62', height='62')
+                                                .media-body.my-auto
+                                                    .row
+                                                        .col
+                                                            p.mb-0
+                                                                b= car.name
+                                                            small.text-muted Booking Car
+                                        .pl-0.flex-sm-col.col-auto.my-auto
+                                            p Required Deposit
+                                        .pl-0.flex-sm-col.col-auto.my-auto
+                                            p
+                                                b= `$${car.requiredDeposit}`
+
+                                    hr.my-2
+                                    .row
+                                        .col
+                                            .row.justify-content-between
+                                                .col-4
+                                                    p.mb-1
+                                                        b Subtotal
+                                                .flex-sm-col.col-auto
+                                                    p.mb-1
+                                                        b= `$${car.requiredDeposit}`
+                                            .row.justify-content-between
+                                                .col
+                                                    p.mb-1
+                                                        b Tax
+                                                .flex-sm-col.col-auto
+                                                    p.mb-1
+                                                        b= `${tax ? tax: '_'}`
+                                            .row.justify-content-between
+                                                .col-4
+                                                    p
+                                                        b Total
+                                                .flex-sm-col.col-auto
+                                                    p.mb-1
+                                                        b= total? total:'_'
+                                            hr.my-0
+                                    .row.mb-5.mt-4
+                                        .col-md-7.col-lg-6.mx-auto
+                                            button.btn.btn-block.btn-primary.btn-lg.btn-billing-address(type='submit') Continue Checkout

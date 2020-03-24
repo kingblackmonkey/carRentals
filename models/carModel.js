@@ -69,6 +69,7 @@ const carSchema = new mongoose.Schema({
     color:{type: String, trim:true, required: [true, 'must have color']},
     imageCover: {type: String, trim:true, required: [true, 'must have image']},
     images: [String],
+    imageCoverUrl: {type: String, trim:true, required: [true, 'must have image Url']},
     createdAt: {
       type: Date,
       default: Date.now()
@@ -132,4 +133,4 @@ carSchema.pre('save', function(next) {
  
   let Car =   mongoose.model('Cars', carSchema);
 
-module.exports = Car;
+module.exports = Car; 

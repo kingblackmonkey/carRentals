@@ -28,7 +28,7 @@ return this
    } 
 
    sort(){
-    this.queryFromReq.sort?  this.collection =  this.collection.sort(  this.queryFromReq.sort.split(',').join(' ')) : this.collection = this.collection.sort('requiredDeposit')
+    this.queryFromReq.sort ?  this.collection =  this.collection.sort(  this.queryFromReq.sort.split(',').join(' ')) : this.collection = this.collection.sort('requiredDeposit')
   return this
 } 
 

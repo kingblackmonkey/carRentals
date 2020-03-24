@@ -11,5 +11,10 @@ head
     link(rel='stylesheet', href='/css/owl.theme.default.min.css')
     link(rel='stylesheet', href='/fonts/flaticon/font/flaticon.css')
     link(rel='stylesheet', href='/css/aos.css')
+    if Message&&MessageType
+        meta.meta-message(name=`${ MessageType? MessageType:''}` content=`${Message? Message:''}`)
+    else
+        meta.meta-message(name=`${ loginMessageType?  loginMessageType:''}` content=`${loginMessage? loginMessage:''}`)
     // MAIN CSS
+    link(rel='stylesheet', href='/css/billingAddress.css')
     link(rel='stylesheet', href='/css/style.css')

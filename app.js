@@ -16,10 +16,14 @@ const userRoutes = require('./routes/userRoute');
 const reviewsRoute = require('./routes/reviewsRoute');
 const carLocationRoute = require('./routes/carLocationRoute')
 
-const signInRoute = require('./routes/userSignIn');
+const ApiUserRoute = require('./routes/ApiUserRoute');
 const errorHandler = require('./controllers/error');
 const nonApiHomePageRoute = require('./routes/nonApiHomePageRoute')
-const  nonApiCarsPageRoute = require('./routes/nonApiCarsPageRoute')
+const nonApiCarsPageRoute = require('./routes/NonApiCarsPageRoute')
+const nonApiContactPageRoute = require('./routes/nonApiContactPageRoute')
+const nonApiWishlistRoute = require('./routes/wishList')
+ const paymentAndCheckoutRoute = require('./routes/paymentAndCheckout')
+ const successPaymentRoute = require('./routes/successPaymentRoute')
 // package to limit number of request
 // limiting number of request can help prevent overload and attacks
 const rateLimit = require("express-rate-limit");
@@ -33,8 +37,7 @@ const  mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean'); 
 
 // this package called http parameter polution 
-// it will delete duplicate key in the url parameters 
-
+// it will delete duplicate key 
 const  hpp = require('hpp');
 
 // helmet package to set security to your header
@@ -44,7 +47,101 @@ const  hpp = require('hpp');
 
 const helmet = require('helmet')
 
-var session = require('express-session')
+
+var csrf = require('csurf')
+
+// seesion for sign in and storing temporary session data
+const session = require('express-session');
+const  MongoDBStore = require('connect-mongodb-session')(session);
+
+//flash message
+const flash = require('connect-flash');
+
+// cookie parser to parse the cookie
+const cookieParser = require('cookie-parser');
+// parse application/json
+// but we want to limit the size of data being sent in the req
+// for performance and security
+app.use(bodyParser.json({limit:'10kb'}));
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+
+// cookie parser middle ware to parse the cookie value
+app.use(cookieParser())
+ 
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*')
+//   res.header(
+//     'Access-Control-Allow-Headers',
+//     'Origin, X-Requested-With, Content-Type, Accept'
+//   )
+//   next()
+
+// });
+
+
+
+const  store = new MongoDBStore({
+  uri: process.env.USER_DATABASE,
+  collection: 'mySessions'
+});
+
+app.use(session({
+  
+  secret: 'hello teddy',
+  cookie: {
+    path    :'/',
+    maxAge: 1000 * 60 * 60 * 5 // 3 hours
+  },
+  store: store,
+ 
+  resave: false,
+  saveUninitialized: false
+}));
+
+// make csrf token available whereerver the res.render is 
+
+// app.use((req, res, next)=>{
+//  console.log(req.body._csrf) 
+//  next()
+// });
+
+
+// spcial stripe webhook route that stripe will send request to this route
+// you dont want csrf to check for csrf token from this route
+// this route help to make sure the payment from  customer is successful
+// after the payment os made from customer 
+// this route will run and stripe has include the information about sucessful or failed payment
+// we can deduct inventory in this route and send email to customer when payment is successful
+app.use('/success', successPaymentRoute  )
+
+var csrfProtection = csrf()
+app.use(csrfProtection);
+
+app.use(function (req, res, next) {
+  res.locals.csrfToken= req.csrfToken()
+  
+  next()
+})
+
+
+app.use(flash());
+
+// app.use(session({
+//   name: 'second cookie',
+//   secret: 'hello tran',
+//   cookie: {
+//     path    :'/hello' ,
+//     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+//   },
+//   store: store,
+ 
+//   resave: false,
+//   saveUninitialized: false
+// }));
+
+
 
 
 // set pug template
@@ -53,6 +150,9 @@ app.set('view engine', 'pug')
 // template folder name and location folder  of template
 const viewPath = path.join(__dirname, 'views')
 app.set('views', viewPath)
+
+
+
 
 // the root when first start the page(will look for html index.html specificly) or css or image or js  request will go to this middle ware and look for assets
 // in the public folder and pull out the asset in the public folder
@@ -74,6 +174,24 @@ app.use(helmet())
 // console.log(process.env.NODE_ENV)
 
 
+// app.use((req,res,next)=>{
+// // console.log(req.session.isAuth)
+//   next()
+// })
+
+
+
+
+// the middle ware with a route '/cars' and its controller can set the value of the session cookie
+// 'another seesion cookie' and '_es_demo' 
+// becacause the route '/cars' dos start with the '/' the root defined in first cookie
+// and start with exact '/cars' defined in the path of session cookie '/cars'
+// so middle ware with route '/cars' and its controller can have access to seesion cooki and can 
+// set value
+// and since the 'another seesion cookie' get defined  first 
+// only the first session cokkie another session cookie can be set and send to client
+
+
 
 
 
@@ -83,13 +201,10 @@ app.use(helmet())
 //   resave: false, // Force save of session for each request.
 //   saveUninitialized: false, // Save a session that is new, but has not been modified
 //   cookie: {
-//     path    :'/api/v1/cars' ,
+//     path    :'/cars' ,
     
 //   }
 // }));
-
-
-
 
 // app.use(session({
 //   name: 'another seesion cookie', // The name of the cookie
@@ -97,12 +212,12 @@ app.use(helmet())
 //   resave: false, // Force save of session for each request.
 //     saveUninitialized: false, // Save a session that is new, but has not been modified
 //     cookie: {
-//       path    :'/' ,
+//       path :'/',
+//       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
       
 //     }
+
 // }));
-
-
 
 
 
@@ -112,12 +227,7 @@ if (process.env.NODE_ENV === "development") app.use(morgan('dev'));
 // it will br written as '/' internally
 
 
-// parse application/json
-// but we want to limit the size of data being sent in the req
-// for performance and security
-app.use(bodyParser.json({limit:'10kb'}));
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+
 
 // package to remve any dolar sign og mongo db so hacker can not use nosql query string attached on
 // request and hack and get data
@@ -134,11 +244,11 @@ app.use(mongoSanitize());
 // you say any request start with '/api' should hit this route
 // if you define the verb like 'get' instead of 'use'
 // if will compare by the exact match path
-app.use("/api/", (req, res, next)=>{
-    // console.log(req.query);
+// app.use("/api/", (req, res, next)=>{
+//     // console.log(req.query);
   
-    next();
-});
+//     next();
+// });
 
 
   
@@ -202,20 +312,23 @@ const getMainPage = (req, res) => {
   
    
   // res.sendFile('overview.html', {root:`${__dirname}/public`} )
-  req.session.views = 1;
+  // req.session.views = 1;
   res.status(200).json({
     status:'success'
     
 });
 } 
 
- app.use('/', nonApiHomePageRoute);
 
+ app.use('/contact',  nonApiContactPageRoute )
  app.use('/cars', nonApiCarsPageRoute);
+app.use('/wishlist',  nonApiWishlistRoute)
 // the request start with '/signin' will hit this route
-app.use('/signin', signInRoute);
+// app.use('/signin', signInRoute);
+// app.use('/logout', logoutRoute);
 
-
+app.use('/checkout', paymentAndCheckoutRoute)
+ app.use('/', nonApiHomePageRoute);
 // =============================================Api routes
 // app.get('/api/v1/tours', getAllTours);
 // app.post('/api/v1/tours', addTour); 
@@ -225,14 +338,15 @@ app.use('/signin', signInRoute);
 
 //add route middle ware for this patch, use method can take middleware handler function  or route middle ware
 // which will lead to the subroute and subroute middleware handler 
-app.use('/api/v1/cars', carRoutes);
+// app.use('/api/v1/cars', carRoutes);
 
 
 
 
 // ===========================
 //user api
-
+// you dont have the api name in the route but this route is using api way
+app.use('/user',  ApiUserRoute);
 
 
 

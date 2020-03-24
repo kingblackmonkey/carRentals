@@ -32,7 +32,7 @@ const CarlocationSchema = new mongoose.Schema({
     required: [true,'Should have phone number' ],
   
     } ,
-    managers:[{ type:  mongoose.Schema.Types.ObjectId }],
+    managers:{ type:  mongoose.Schema.Types.ObjectId },
     carsAvalaibleAtThisLocation: [{ type:  mongoose.Schema.Types.ObjectId}],
    locationCoordinates:{
             // It's important to define type within type field, because
@@ -43,6 +43,15 @@ const CarlocationSchema = new mongoose.Schema({
     coordinates: {type: [Number], required: [true,'Should have coordinates' ]}
    }
 });
+
+// CarlocationSchema.pre('find',function() {
+//     this.populate({
+//         path:'managers.',
+//         model:'Users',
+//         select:'name email'
+//     })
+// });
+
 
 // must create index for locationCoordinates so geo spatial query can work
 CarlocationSchema.index({ locationCoordinates : "2dsphere" } );

@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const nonApiCarsController  = require('../controllers/nonApiCars')
-router
-.get( '/', nonApiCarsController.getCars )
+const ApiCarsController  = require('../controllers/NonApiCars')
+const userAuthenticationControllers = require('../controllers/userAuthentication')
+
+router.get( '/',userAuthenticationControllers.verifyWebtokenToDisplayLoggedInHeaderForLoginnedUser ,ApiCarsController.getCars)
+
+
+
 
 module.exports = router;
+

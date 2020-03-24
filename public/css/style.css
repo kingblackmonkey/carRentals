@@ -262,7 +262,7 @@ h1, h2, h3, h4, h5,
   background: #000; }
 
 .form-control {
-  height: 55px;
+  height: 35px;
   background: #fff !important;
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; }
   .form-control:active, .form-control:focus {
@@ -477,7 +477,7 @@ h1, h2, h3, h4, h5,
         .site-navbar .site-navigation .site-menu > li > a:hover {
           color: #007bff; }
       .site-navbar .site-navigation .site-menu > li.active > a {
-        color: #007bff !important; }
+        color: #59a9ff !important; }
     .site-navbar .site-navigation .site-menu .has-children {
       position: relative; }
       .site-navbar .site-navigation .site-menu .has-children > a {
@@ -1025,7 +1025,7 @@ h1, h2, h3, h4, h5,
 
 .form-control {
   border: none;
-  border: 1px solid #e6e6e6; }
+  border: 1px solid #b3acac; }
   .form-control:hover, .form-control:active, .form-control:focus {
     border: 1px solid #666666; }
 
@@ -1239,21 +1239,23 @@ h1, h2, h3, h4, h5,
       color: #fff;
       font-size: 3rem; }
     .ftco-cover-1.overlay p {
-      color: #fff; }
+      /* color: #fff;  */
+    }
       .ftco-cover-1.overlay p a {
-        color: #fff;
+        /* color: #fff;
         text-decoration: underline;
-        font-weight: 700; }
+        font-weight: 700; */
+      }
         .ftco-cover-1.overlay p a:hover {
           text-decoration: none; }
     .ftco-cover-1.overlay form .form-control,
     .ftco-cover-1.overlay form .btn {
-      height: 55px;
+      height: 35px;
       border-radius: 4px; }
     .ftco-cover-1.overlay form .form-control {
       padding-left: 20px;
       padding-right: 20px;
-      border-color: transparent;
+      /* border-color: transparent; */
       margin-right: 10px; }
     .ftco-cover-1.overlay form .btn {
       border-color: transparent; }
@@ -1578,3 +1580,118 @@ h1, h2, h3, h4, h5,
     -ms-flex: 0 0 50px;
     flex: 0 0 50px;
     border-radius: 50%; }
+
+/* Form style */
+.myform{
+  position: relative;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 1rem;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+  pointer-events: auto;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 1.1rem;
+  outline: 0;
+  max-width: 500px;
+  margin: 0 auto;
+   }
+       .tx-tfm{
+       text-transform:uppercase;
+       }
+       .mybtn{
+       border-radius:50px;
+       }
+      
+       .login-or {
+       position: relative;
+       color: #aaa;
+       margin-top: 10px;
+       margin-bottom: 10px;
+       padding-top: 10px;
+       padding-bottom: 10px;
+       }
+       .span-or {
+       display: block;
+       position: absolute;
+       left: 50%;
+       top: -2px;
+       margin-left: -25px;
+       background-color: #fff;
+       width: 50px;
+       text-align: center;
+       }
+       .hr-or {
+       height: 1px;
+       margin-top: 0px !important;
+       margin-bottom: 0px !important;
+       }
+
+        form .error {
+       color: #ff0000;
+       }
+       #second{display:none;}
+
+
+.myform.form a#signup {
+  color: #007bff;
+  text-decoration: underline;
+    font-weight: 300;
+}
+
+/* button next and previous */
+a.round:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.previous {
+  background-color: #f1f1f1;
+  color: black;
+}
+
+.next {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.round {
+
+  text-decoration: none;
+  display: inline-block;
+  padding: 0px 2px;
+  border-radius: 2px;
+}
+
+
+/* sort container  mobile view*/
+.sortContaiiner {
+  margin-top : 4.5rem  ;
+  margin-bottom: 1.5rem;
+  
+ }
+@media  (min-width: 992px) {
+  .sortContaiiner {
+   margin : 1.5rem 0 ;
+
+  }
+}
+
+/* motify js style */
+.notifyjs-corner{
+  z-index: 3000 !important;
+}
+
+/* ---------zipcode form style */
+.zipcodeForm{
+  height: 0px;
+  overflow: hidden;
+  transition: all .5s linear;
+}
+
+.zipcodeForm.active{
+  height: 248px;
+}

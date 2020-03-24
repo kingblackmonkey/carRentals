@@ -3,7 +3,7 @@
     .site-mobile-menu-close.mt-3
       span.icon-close2.js-menu-toggle
   .site-mobile-menu-body
-header.site-navbar.site-navbar-target(role='banner')
+header.site-navbar.site-navbar-target(role='banner', style= carLink || orderConfirm?'background:#000000d9':''   )
   .container
     .row.align-items-center.position-relative
       .col-3
@@ -20,14 +20,22 @@ header.site-navbar.site-navbar-target(role='banner')
            
             li(class= carLink ?  "active":'')
               a.nav-link(href='/cars') Cars
-            li
-              a.nav-link(href='about.html') About
+              
+            li(class= wishlistLink ?  "active":'')
+              a.nav-link.nav-wishlist(href='/wishlist' data-wishlist= message? message:'') Your WishList
+            
            
-            li
-              a.nav-link(href='contact.html') Contact
-            li
-              a.nav-link(href='services.html') Log In 
-            li
-              a.nav-link(href='services.html') ProFIle  
-            li
-              a.nav-link(href='services.html') Log Out 
+            li(class=contactLink ?  "active":'')
+              a.nav-link(href='/contact') Contact
+            if !user
+              li(class= loginLink ?  "active":'')
+                a.nav-link(href='/user/signin') Log In 
+             
+            else
+              li
+                  input(type="hidden", name="_csrf" value= csrfToken)
+                  a.nav-link.logout(style= 'cursor:pointer') Logout          
+              li  
+                a.nav-link(href='services.html', onMouseOver="this.style.transform = 'translateY(-2px)'",   onMouseOut="this.style.transform = 'translateY(0px)'")  
+                  img(src='/images/default.jpg', alt=`${user.name}`, height='42', width='42', style='border-radius: 50%; margin-right: 10px')
+                  span= user.name

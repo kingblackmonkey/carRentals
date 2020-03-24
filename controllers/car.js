@@ -136,7 +136,7 @@ try {
 // no need to handle error here cause if we find none docs after querying 
 // then we just need to send back 
 
-//  req.session.views = true
+   
 // console.log(req.session);
 
     res.status(200).json({

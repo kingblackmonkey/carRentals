@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const {promisify} = require('util');
 // import send email function 
 const sendEmail = require('../utils/sendEmailNodeMailer')
+const Email = require('../utils/sendEmailNodeMailer')
 
 // crypto built in package  for reset token password
 const crypto = require('crypto');
@@ -19,54 +20,120 @@ const rateLimit = require("express-rate-limit");
 
 
 const createWebTOkenAndSendByCookie = (res, user, status, signup)=>{
-    console.log( process.env.NODE_ENV)
+    // console.log( process.env.NODE_ENV)
     // string token should be 32 characters long
-    let token = jwt.sign({ _id: user._id }, 'this is my secret key and no one should know', {expiresIn: process.env.NODE_ENV === 'development' ? '1d' : '7d',});
+    // let token = jwt.sign({ _id: user._id }, 'this is my secret key and no one should know', {expiresIn: process.env.NODE_ENV === 'development' ? '1d' : '7d',});
+    let token = jwt.sign({ _id: user._id ,iat: Math.floor(Date.now() / 1000) - 2 } ,'this is my secret key and no one should know', {expiresIn: process.env.NODE_ENV === 'development' ? '1d' : '7d',});
 
     res.cookie('jwt', token, {
-        // expires in 60 days
-        expires: new Date(Date.now() + 5184000000), 
+        // expires in 1 days
+        expires: new Date(Date.now() + 1000 *60*60*1), 
         // this make seding cooking by https
         // set to false in development
         secure:process.env.NODE_ENV === 'development' ? false:true,
         httpOnly: true,
       });
  
-            signup ?  res.status(200).json({
-                status,
-                data: {
-                    token,
-                 user
-                }
-            }):
-                res.status(200).json({
-                status,
-                data: {
-                    token
-                }
-            });
+            // signup ?  res.status(200).json({
+            //     status,
+            //     data: {
+            //         token,
+            //      user
+            //     }
+            // }):
+            //     res.status(200).json({
+            //     status,
+            //     data: {
+            //         token
+            //     }
+            // });
 }
 
 
 
 
 
+ 
+
+exports.getSignup = (req,res,next)=>{
+    try {
+        res.render('signup')
+    
+    } catch (error) {
+        next(error);
+    }
+} 
 
 
-
-
-
-exports.signup = async(req, res, next)=>{
-    // console.log(req.body)
+exports.postSignup = async(req, res, next)=>{
+    console.log(req.body)
 try {
  const user = await User.create(req.body)
-//  even we set select to false in sche ma
-// but that only work with query
-// in the case of creating new doc
-// it will gives us back everything ; so hide the prop by setting to undefined
+// //  even we set select to false in sche ma
+// // but that only work with query
+// // in the case of creating new doc
+// // it will gives us back everything ; so hide the prop by setting to undefined
 user.password = undefined;
 user.passwordCreatedAt = undefined;
- createWebTOkenAndSendByCookie(res,user,'success', 'signup')
+user.wishlist = undefined
+//  createWebTOkenAndSendByCookie(res,user,'success', 'signup')
+createWebTOkenAndSendByCookie(res,user)
+
+     //check if there is any car in wishlist in sesssion and transfer to wishlist newly sign up signin user       
+ 
+   // transfer those cars to wishlist of newly signup  user
+   if(req.session.cars){
+        if(req.session.cars.length !==0 ){
+            //if there is any car list in the wishlist of data session
+            // update the wishlist of newly signed up user
+            
+
+            const newWishlist = [...req.session.cars];
+            req.session.cars = undefined;
+            await  User.findByIdAndUpdate(user._id,{wishlist: newWishlist})
+
+        
+        }
+   }
+
+
+
+    // also check if any url location insession data because
+    // if there is url in there it means user try to click on rent me button  but got 
+    // rejected because that user did not login 
+    // and your code did save the url location for  that car page 
+    // so when the user login again if there is a url location there
+    // we send back to client so client can redirect to that car par location
+    // and you set that url location in session in data base to null
+    // to remove it
+
+let savedUrlLocation = ''
+if(req.session.urlLocation){
+    savedUrlLocation = req.session.urlLocation;
+    req.session.urlLocation = undefined
+}
+
+res.status(200).json({
+        status:'success',
+        message:'Sign Up Successful!',
+        data:  user,
+        savedUrlLocation 
+        
+    })
+
+} catch (error) {
+    next(error);
+}
+}
+
+
+// get request for sign in form
+exports.getSignin= async(req, res, next)=>{
+    // console.log(req.body)
+try {
+    res.render('login', {
+        loginLink:true
+    })
 
 } catch (error) {
     next(error);
@@ -82,13 +149,14 @@ user.passwordCreatedAt = undefined;
 // if a user reach the limt this createAccountLimiter will call gloabal error middle ware and
 // pass in error before it reaches the signin middle ware 
 exports.createAccountLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5minutes
+    windowMs:  1*60* 1000, // 1minute
     max: 5, // start blocking after 5 requests
     message:
-      "Too many attemps to login  from this IP, please try again after an hour"
+      "Too many attemps to login  from this IP Address, please try again after an hour"
   });
 
 exports.signin = async function(req, res, next){
+    console.log(req.body)
     const {email, password} = req.body
     try {
         // check if user exist
@@ -102,24 +170,101 @@ exports.signin = async function(req, res, next){
     // find returns array of found object
      const user = await User.findOne({email}).select('+password');
  
-
+console.log(user)
 //   if no user or password dont match throw error
 
-      if(!user||  !await user.checkPassword(password, user.password)){
+    if(!user||  !await user.checkPassword(password, user.password)){
         
         next(
+
             new AppError(`email incorrect or password dont match; you have ${req.rateLimit.remaining} attemps left`, 403))
         return
-     }
+    }
 
     //  if there is user email and password match
     // create token and send back token
     createWebTOkenAndSendByCookie(res,user, 'success')
+
+
+     //check if there is any car in wishlist in sesssion and transfer to wishlist of signin user       
+ 
+   // transfer those cars to wishlist of signin user
+       if(  req.session.cars){
+           if(req.session.cars.length !==0){
+                 //    find duplicate in the wishlist of sign in user 
+        // if there is curent duplicate for signin user 
+        // filter out this dunplicate in session whish list then add 
+        // the wish list of session and wishlist of signin user together
+
+        let filterdDuplicateCarId =     req.session.cars.filter((carId)=>{
+            return  !user.wishlist.includes(carId.toString())   
+        })
+        
+        const newWishlist = [...filterdDuplicateCarId, ...user.wishlist];
+        req.session.cars = undefined;
+             await  User.findByIdAndUpdate(user._id,{wishlist: newWishlist})
+        }
+      
+        
+    
+          
+
+       
+   }
+
+    //we will use the api request for log in
+    // java script front end will handle the reques and displa meesage
+    // back end need to send back data or error
+
+    // also check if any url location insession data because
+    // if there is url in there it means user try to click on rent me button  but got 
+    // rejected because that user did not login 
+    // and your code did save the url location for  that car page 
+    // so when the user login again if there is a url location there
+    // we send back to client so client can redirect to that car par location
+    // and you set that url location in session in data base to null
+    // to remove it
+    let savedUrlLocation = ''
+    if(req.session.urlLocation){
+        savedUrlLocation = req.session.urlLocation;
+        req.session.urlLocation = undefined
+    }
+    res.status(200).json(
+        {status: 'success', 
+        message:'Login Successful!', 
+        savedUrlLocation
+    
+    }
+        
+        )
+
     } catch (error) {
         
         next(error);
     }
     }
+
+// logout controller
+exports.logout = (req,res,next)=>{
+    //set new coikie thats will expire in 2 second
+    // and return the successful log out message
+    // then the new jwt cookie live for 2 second 
+    // also the jwt itself is also 2 second live
+    // then it will be gone  
+    let token = jwt.sign({ }, 'this is my secret key and no one should know', {expiresIn: 1,});
+    res.cookie('jwt', token, {
+        // expires in 1 second
+        expires: new Date(Date.now() + 1000 ), 
+        // this make seding cooking by https
+        // set to false in development
+        secure:process.env.NODE_ENV === 'development' ? false:true,
+        httpOnly: true,
+      });
+    
+    res.status(200).json({status: 'success', message:'Log out Successful!'})
+ 
+
+}
 
 
 exports.verifyWebtoken= async(req, res, next)=>{
@@ -135,18 +280,31 @@ exports.verifyWebtoken= async(req, res, next)=>{
 // first of all check if the request header has the web token 
 // in the token format of 'Bearer 123423'
 // best practice is to send token in header and add the word Bearer to we token
-if(!req.headers.authorization || !req.headers.authorization.startsWith('Bearer') ){
-    next(new AppError('maybe you are not logged in or you are logged in but you forget to provide token; provide token that starts with Bearer word follow by a space and token',401))
-}
-        // we will verify that token in 3 scenario
+// only for decaoupled api where client send in api request
+        // if(!req.headers.authorization || !req.headers.authorization.startsWith('Bearer') ){
+        //     next(new AppError('maybe you are not logged in or you are logged in but you forget to provide token; provide token that starts with Bearer word follow by a space and token',401))
+        // }
+                // we will verify that token in 3 scenario
 
         // 1) if the token is intact and has not been changed
         // you out uder id in the payload; best is to put user id in the payload
         // cause it is most unique
         // i also turn the webtoken verify method of json web token to async function
       const verifyAsync=   promisify( jwt.verify); 
-        const decodedToken =  await verifyAsync(req.headers.authorization.split(' ')[1], 'this is my secret key and no one should know') 
+    //   for decoupled api
+        // const decodedToken =  await verifyAsync(req.headers.authorization.split(' ')[1], 'this is my secret key and no one should know') 
+        // get the jwt out from cookie
+
+        const decodedToken =  await verifyAsync(req.cookies.jwt, 'this is my secret key and no one should know') 
+        
         // console.log(decodedToken)  
+        
+        // const verifyAsync=   promisify( jwt.verify);        
+        // let a = req.headers.cookie.split('=')
+        // const decodedToken =  await verifyAsync(a[1], 'this is my secret key and no one should know')
+        // console.log(decodedToken) 
+        // console.log(a[1])
+        
         // 2)if the id of user in the token payload still exist in database
         // if yes then the user is still current
         // if not it means this token belongs to deleted user
@@ -206,6 +364,58 @@ if(curentUser.checkPasswordTimeStampAndWebTokenTImeStamp(timeStampInmilliseconsO
     }
 
 
+    exports.verifyWebtokenToDisplayLoggedInHeaderForLoginnedUser= async(req, res, next)=>{
+    //  console.log('hello')
+  
+        try {           
+         
+            if (req.cookies.jwt)   {
+                const verifyAsync=   promisify( jwt.verify); 
+                    
+                        
+                const decodedToken =  await verifyAsync(req.cookies.jwt, 'this is my secret key and no one should know') 
+                
+        
+            
+                const curentUser = await User.findById(decodedToken._id)
+            
+                if(!curentUser) {
+                    // the view index should have access to this user prop cause it is gloabl
+                    res.locals.user = undefined
+                    // attach user a long the way in middle ware 
+                    // so the next middle can know if user is logged in or no; 
+                    // this is useful to add wishlist car to signin or unsignin user 
+                    req.user = undefined
+                    return  next()
+                }
+
+                const timeStampInmilliseconsOfPassword = new Date(curentUser.passwordCreatedAt).getTime()
+                if(curentUser.checkPasswordTimeStampAndWebTokenTImeStamp(timeStampInmilliseconsOfPassword ,decodedToken.iat * 1*1000)){
+                
+                    res.locals.user =  curentUser
+                    req.user = curentUser
+                }else{
+                    res.locals.user = undefined
+                    req.user = undefined
+                
+                }
+                                       
+                   return next();
+            }
+
+            res.locals.user = undefined
+            req.user = undefined
+            next();
+                    
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+        }
+    
+
+
+
 exports.checkAdminRole = (...roles)=>{
         return   (req, res, next)=>{
    
@@ -238,14 +448,24 @@ next()
 }
 
 }
+
+
+
+exports.getForgotpassword = (req,res,next)=>{
+    res.render('forgotPassword')
+}
+
     
  exports.forgotpassword = async (req, res, next)=>{
     //  imagine user is on the forgotpassword page and enter their email
 try {
         // check if there is user with this email
-        let user = await User.findOne(req.body)
+        console.log(req.body)
+        let user = await User.findOne({email: req.body.email})
         
-        if(!user) next(new AppError('sorry, no user with this email', 401) )
+        if(!user) {
+            return next(new AppError('sorry, no user with this email', 401) )
+        } 
     
         //  create reset password token and hash it and expiration for token
         //  and  add to user doc before save in database
@@ -255,12 +475,20 @@ try {
     const resetURL = `${req.protocol}://${req.get(
     'host'
   )}/api/v1/users/resetPassword/${resetPasswordToken}`;
-    await sendEmail(
-    {        
-        to: `${req.body.email}`,   
-        text: `Token is good for 10 minutes. Click this link to reset password: ${resetURL}`
-    }
-  )  
+//     await sendEmail(
+//     {        
+//         to: `${req.body.email}`,   
+//         text: `Token is good for 10 minutes. Click this link to reset password: ${resetURL}`
+//     }
+//   )  
+
+        let email = new Email({
+              to: `${req.body.email}`,   
+              text: `Token is good for 10 minutes. Click this link to reset password: ${resetURL}`
+        })
+
+        await email.makeTransporter();
+        await email.sendEmailForResetpassword()
 //   if sucessfuly send the email then save the updated doc to database
 
     // save the new updated user doc back to database with newly created props
@@ -273,9 +501,9 @@ try {
     await user.save({validateBeforeSave:false})
     res.status(200).json({
         status: 'success',
-        data: {
-            message: 'check your email'
-        }
+        
+         message: 'Please check your email for rest pasword llink'
+        
     });
 } catch (error) {
     // if cannot send reset password token 
@@ -286,7 +514,7 @@ try {
     user.passwordResetToken  = undefined;
     user.passwordResetTokenExpire = undefined
     await user.save({ validateBeforeSave: false });
-
+    
     return next(
         new AppError('There was an error sending the email. Try again later!'),
       500
@@ -299,7 +527,10 @@ try {
 
  }
 
-
+//get reset password
+exports.getResetPassword = (req,res,next)=>{
+    res.render('newpassword')
+}
  exports.resetPassword = async(req, res, next)=>{
 
     // uer will send request to this route and hit this middle ware with the token in this middleware's toute
@@ -315,44 +546,68 @@ try {
  
 // hash the unhased incoming reset password token same to the one in databased 
 // so we can find the match reset  password token
-   let hashedResetPasswordToken= crypto
-       .createHash('sha256')
-       .update(req.params.resetToken)
-       .digest('hex');
+try {
+    let hashedResetPasswordToken= crypto
+    .createHash('sha256')
+    .update(req.params.resetToken)
+    .digest('hex');
 
-    let user = await User.findOne({
-        passwordResetToken:hashedResetPasswordToken,
-        passwordResetTokenExpire:{$gt: Date.now()}
+ let user = await User.findOne({
+     passwordResetToken:hashedResetPasswordToken,
+     passwordResetTokenExpire:{$gt: Date.now()}
 
-    })
-   
-    if(!user){
-        // if no user means that token is not match or token is expired 
-         next(new AppError('sorry, token is broken or expired', 401))
-         return
+ })
+
+ if(!user){
+     // if no user means that token is not match or token is expired 
+      next(new AppError('sorry, token is broken or expired', 401))
+      return
+ }
+
+ // update the user with new password and time stamp for new password
+ user.password = req.body.password;
+ user.passwordConfirmed = req.body.passwordConfirmed;
+ // i subtract 1000 millisecond to make password time stamp 1 minute early than
+ // to make sure it is 1 minute eralier(smaller) than 
+ // the time stamp of the json web token
+ // the password time stamp must be smaller(earlier) than the time stamp of jwt time
+ // stamp
+ // otherwise when user login with email  new password and get the token andaccess some routes
+ // and when it verifies the token and if password timee is not smaller(earlier) than json web token  the user
+ // will receive  error from the code that handles verifying token process
+
+ user.passwordCreatedAt = Date.now() - 2000  ;
+ user.passwordResetToken = undefined;
+ user.passwordResetTokenExpire = undefined;
+
+ await user.save()
+
+ // create login token and send to user so they when they login they have token
+ // along with them and can navigate the protected routes
+ createWebTOkenAndSendByCookie(res,user, 'success')
+    // also check if any url location insession data because
+    // if there is url in there it means user try to click on rent me button  but got 
+    // rejected because that user did not login 
+    // and your code did save the url location for  that car page 
+    // so when the user login again if there is a url location there
+    // we send back to client so client can redirect to that car par location
+    // and you set that url location in session in data base to null
+    // to remove it
+    let savedUrlLocation = ''
+    if(req.session.urlLocation){
+        savedUrlLocation = req.session.urlLocation;
+        req.session.urlLocation = undefined
     }
-   
-    // update the user with new password and time stamp for new password
-    user.password = req.body.password;
-    user.passwordConfirmed = req.body.passwordConfirmed;
-    // i subtract 1000 millisecond to make password time stamp 1 minute early than
-    // to make sure it is 1 minute eralier(smaller) than 
-    // the time stamp of the json web token
-    // the password time stamp must be smaller(earlier) than the time stamp of jwt time
-    // stamp
-    // otherwise when user login with email  new password and get the token andaccess some routes
-    // and when it verifies the token and if password timee is not smaller(earlier) than json web token  the user
-    // will receive  error from the code that handles verifying token process
 
-    user.passwordCreatedAt = Date.now() - 1000  ;
-    user.passwordResetToken = undefined;
-    user.passwordResetTokenExpire = undefined;
-
-    await user.save()
-
-    // create login token and send to user so they when they login they have token
-    // along with them and can navigate the protected routes
-    createWebTOkenAndSendByCookie(res,user, 'success')
+ res.status(200).json({
+     status:'success',
+     message:'Password updated,Yor are now Logged in!',
+    savedUrlLocation
+ })
+} catch (error) {
+    next()
+}
+  
 } 
 
 

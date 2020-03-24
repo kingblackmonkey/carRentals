@@ -1,0 +1,85 @@
+extends index
+
+block content
+    .ftco-blocks-cover-1
+        .ftco-cover-1.overlay.innerpage(style="background-image: url('images/hero_2.jpg');")
+            .container
+                .row.align-items-center.justify-content-center
+                    .col-lg-6.text-center
+                        h1= carIdInwishlist.length ? 'Your Wishlist': 'Your Wishlist Is Empty' 
+                        
+  
+    if  carIdInwishlist.length
+        .site-section.bg-light      
+            .container
+                .row
+                    each car in carsInwishlist
+                        .col-lg-4.col-md-6.mb-4
+                            .item-1
+                                div
+                                    img.img-fluid(src= car.imageCover, alt='Image')
+                                .item-1-contents
+                                    .text-center
+                                        h3
+                                            a(href='#')= car.name
+                                        .rating
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                        .rent-price
+                                            span= `$${car.price}/day`
+                                    ul.specs
+                                        li
+                                            span Required Deposit
+                                            span.spec=  `$${car.requiredDeposit}` 
+                                        li
+                                            span Mph
+                                            span.spec= car.mph
+                                        li
+                                            span Seats
+                                            span.spec= car.MaxPassenger
+                                        li
+                                            span Make
+                                            span.spec= new Date(`${car.manufacturedDay}`).getFullYear()
+                                    
+                                    .d-flex.action.justify-content-between
+                                        a.btn.btn-primary(href=`/checkout?carId=${car._id}&wishlist=true`) Rent Me
+                                        form(action='/wishlist/deleteCar' class=wishlist method="post" )                                   
+                                            input(type='hidden', name="carId" value= car._id) 
+                                            //-add input hiiden csurf token here
+                                            input(type='hidden',name="_csrf" value= csrfToken)  
+                                            input.btn.btn-danger(type='submit', value='Unwhislist')                             
+                                            
+                                   
+
+            
+                    
+    .container.site-section.mb-5
+        .row.justify-content-center.text-center
+            .col-7.text-center.mb-5
+                h2 How it works
+                p
+                    | Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo assumenda, dolorum necessitatibus eius earum voluptates sed!
+        .how-it-works.d-flex
+            .step
+                span.number
+                    span 01
+                span.caption Time & Place
+            .step
+                span.number
+                    span 02
+                span.caption Car
+            .step
+                span.number
+                    span 03
+                span.caption Details
+            .step
+                span.number
+                    span 04
+                span.caption Checkout
+            .step
+                span.number
+                    span 05
+                span.caption Done

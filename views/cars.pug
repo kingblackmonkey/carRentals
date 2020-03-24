@@ -2,54 +2,110 @@ extends index
 
 block content
     .ftco-blocks-cover-1
-        .ftco-cover-1.overlay.innerpage(style="background-image: url('images/hero_2.jpg');")
-            .container
-                .row.align-items-center.justify-content-center
-                    .col-lg-6.text-center
-                        h1 Our For Rent Cars
-                        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
-    .site-section.bg-light
-        .container
+        
+        if cars.length
+            .site-section.bg-light.py-5
+                
+        .container.car-container.mt-5
+            .sortContaiiner
+                   
+                    form.row.justify-content-end.align-items-center.sort-price-form(action='/cars')
+                        input(type='hidden', name="page" value= curentPage)  
+                        label.mb-0 Sort Cars
+                        select.sort-price-select.ml-3(name='sort', data-current-page= curentPage)
+                            option(value='', selected= !!sortValue ) Recommended
+                            option(value='price', selected= sortValue ==='price' ) Price low to high
+                            option(value='-price', selected= sortValue ==='-price' ) Price high to low
+                            
             .row
-                each car in cars
-                    .col-lg-4.col-md-6.mb-4
-                        .item-1
-                            a(href='#')
-                                img.img-fluid(src='images/img_1.jpg', alt='Image')
-                            .item-1-contents
-                                .text-center
-                                    h3
-                                        a(href='#') Range Rover S64 Coupe
-                                    .rating
-                                        span.icon-star.text-warning
-                                        span.icon-star.text-warning
-                                        span.icon-star.text-warning
-                                        span.icon-star.text-warning
-                                        span.icon-star.text-warning
-                                    .rent-price
-                                        span $250/
-                                        | day
-                                ul.specs
-                                    li
-                                        span Doors
-                                        span.spec 4
-                                    li
-                                        span Seats
-                                        span.spec 5
-                                    li
-                                        span Transmission
-                                        span.spec Automatic
-                                    li
-                                        span Minium age
-                                        span.spec 18 years
-                                .d-flex.action
-                                    a.btn.btn-primary(href='contact.html') Rent Now
+                if cars.length
+                    each car in cars
+                        .col-lg-4.col-md-6.mb-4
+                            .item-1
+                                div
+                                    img.img-fluid(src= car.imageCover, alt='Image')
+                                .item-1-contents
+                                    .text-center
+                                        h3
+                                            a(href='#')= car.name
+                                        .rating
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                            span.icon-star.text-warning
+                                        .rent-price
+                                            span= `$${car.price}/day`
+                                    ul.specs
+                                        li
+                                            span Required Deposit
+                                            span.spec=  `$${car.requiredDeposit}` 
+                                        li
+                                            span Mph
+                                            span.spec= car.mph
+                                        li
+                                            span Seats
+                                            span.spec= car.MaxPassenger
+                                        li
+                                            span Make
+                                            span.spec= new Date(`${car.manufacturedDay}`).getFullYear()
+                                    
+                                    .d-flex.action.justify-content-between
+                                        a.btn.btn-primary.rent-me(href=`/checkout?carId=${car._id}`) Rent Me
+                                        //- if any car id in the session wish list car id 
+                                        //- render the wishlist text leeting user know 
+                                        //- this car alredy in the wishlist 
+                                    
+                                    
+                                        if carIdInwishlist.includes(car._id.toString())
+                                        
+                                            h6 Wishlisted                          
+                                        else
+                                            form(action='/wishlist/addCar' class=wishlist method="POST" ) 
+                                                //- add input hidden with csurf token here 
+                                                input(type='hidden', name="_csrf" value= csrfToken)                                  
+                                                input(type='hidden', name="carId" value= car._id) 
+                                                input.btn.btn-info.btn-wishlist(type='submit', value='Wishlist Me')                             
+                                                    
+                    
+                                    .action
+                                        a.btn.btn-warning.btn-findme(style='cursor: pointer') Find Me
+                                        form.mt-3(class= `zipcodeForm`)
+                                            p Please Enter Your ZipCode and Mileage
+                                            .form-group
+                                                div
+                                                    label ZipCode:
+                                                    input.form-control#zipcode(type='text', name=`zipcode`, placeholder='zipcode')
+                                            .form-group
+                                                div
+                                                    label Within Miles:
+                                                    input.form-control#miles(type='number', name='miles', min='1', max='1000')
+                                            input(type='hidden', name="_csrf" value= csrfToken) 
+                                            input(type='hidden', name="carId" value= car._id) 
+                                            input(type='submit', value='Submit')
+
           
-                .col-12
-                    span.p-3 1
-                    a.p-3(href='#') 2
-                    a.p-3(href='#') 3
-                    a.p-3(href='#') 4
+                    .col-12.text-center
+                        .row.justify-content-end.align-items-center
+                            .paginationButton
+                                if previousPage
+                                    a(href= `/cars?page=${previousPage}&sort=${sortValue}`   , class="previous round") Prev
+                                else
+                                    span(class="previous round") Prev
+                                span.mx-4= `${ curentPage}/${totalPage}`   
+                                if nextPage                                                         
+                                    a(href=`/cars?page=${nextPage}&sort=${sortValue}` ,class="next round") Next
+                                else
+                                    span(class="next round") Next
+                            form.form-select-page(action="/cars", method="get") 
+                                input(type='hidden', name="sort" value= sortValue)                                    
+                                select#select-pages(name='page')   
+                                    - for (let x = 1; x <= totalPage; x++)
+                                        option(value= x, selected= curentPage === x )= x                       
+                                    
+                       
+                else
+                    h3.mx-auto Sorry Cars not Found
     .container.site-section.mb-5
         .row.justify-content-center.text-center
             .col-7.text-center.mb-5

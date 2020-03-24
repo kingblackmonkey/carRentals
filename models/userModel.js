@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 // crypto built in package  for reset token password
 const crypto = require('crypto');
+require('./carModel');
 const userSchema = new mongoose.Schema(
 
   {
@@ -29,21 +30,27 @@ const userSchema = new mongoose.Schema(
     },
     role:{
       type:String,
-      enum: ['user','team-leader','admin'],
+      enum: ['user','admin'],
       default:'user'
     },
+    carBooked:{
+      type:[mongoose.Schema.Types.ObjectId]
     
+    },
+    wishlist:{
+      type:  [String]
+    },
     photo: {type:String},
     password: {
         type: String,
-        minlength:[5, "password must be at least 5 characters"],
+        minlength:[6, "password must be at least 6 characters"],
         maxlength:[15, "allow only  15 characters max "],
         required :[true, "must have password"],
         select:false
     },
     passwordConfirmed: {
         type: String,
-        minlength:[5, "password must be at least 5 characters"],
+        minlength:[6, "password must be at least 6 characters"],
        maxlength:[15, "allow only  15 characters max "],
        required:[true, "must have confirmed password"],
        validate: {
@@ -57,7 +64,10 @@ const userSchema = new mongoose.Schema(
         message: props => `${props.value} does not match with the password`
       },
     },
-    passwordCreatedAt:{ type: Date, default: Date.now },
+    // to make sure the password created time is less than the jwt time we subtract 
+    // the pass word created time by 3 to make it less than jwt token time
+    // so when validate the jwt the jwt is greater than password created time and it is valid
+    passwordCreatedAt:{ type: Date, default:  ()=> Date.now() - (1000 * 3 ) },
 
     passwordResetToken:String,
     passwordResetTokenExpire: Date
@@ -82,6 +92,8 @@ const userSchema = new mongoose.Schema(
 // so dont worry about that
 // just dont need to save the confirmed password or encrypt it
 
+// this presave run means the doc akready passed the rules in schema
+// the last part is to save this doc in database
 userSchema.pre('save', async function(next){
   // console.log(this.isModified('password'))
  if(this.isModified('password')){
